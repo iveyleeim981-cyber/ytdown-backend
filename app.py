@@ -1,77 +1,71 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import yt_dlp
-from supabase import create_client
 import os
+import uuid
 
-app = Flask(__name__)
-CORS(app, origins="*", allow_headers=["Content-Type"], methods=["GET", "POST", "OPTIONS"])
+app = FastAPI(title="YTDown Backend")
 
-SUPABASE_URL = "https://hmewxqlrhqjznmmygelw.supabase.co"
-SUPABASE_KEY = "sb_secret_2SrgeIULs2hHYQJXtdXIPg_-Egfqgng"
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-COOKIES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
+class DownloadRequest(BaseModel):
+    url: str
+    format: str      # "mp4" or "mp3"
+    quality: str = "best"
 
-@app.route('/fetch', methods=['POST', 'OPTIONS'])
-def fetch():
-    if request.method == 'OPTIONS':
-        return '', 200
+@app.get("/")
+async def root():
+    return {"status": "✅ YTDown Backend is running"}
 
-    data = request.json
-    url = data.get('url')
-    fmt = data.get('format', 'mp4')
-    quality = data.get('quality', '1080p')
-
-    if not url:
-        return jsonify({'error': 'No URL provided'}), 400
-
-    ydl_opts = {
-        'quiet': True,
-        'skip_download': True,
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' if fmt == 'mp4' else 'bestaudio/best',
-        'ignoreerrors': False,
-        'no_warnings': True,
-    }
-
-    if os.path.exists(COOKIES_PATH):
-        ydl_opts['cookiefile'] = COOKIES_PATH
-
+@app.post("/fetch")
+async def fetch_video(request: DownloadRequest):
     try:
+        video_id = str(uuid.uuid4())[:8]
+        
+        ydl_opts = {
+            'outtmpl': f"downloads/{video_id}_%(title)s.%(ext)s",
+            'cookiefile': 'cookies.txt',
+            'quiet': True,
+            'no_warnings': True,
+            'noplaylist': True,
+            'http_chunk_size': 10485760,
+        }
+
+        if request.format == "mp4":
+            ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best'
+        else:  # mp3
+            ydl_opts['format'] = 'bestaudio/best'
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '320',
+            }]
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            title = info.get('title', 'Unknown')
-            duration = info.get('duration_string', '?')
+            info = ydl.extract_info(request.url, download=True)
+            
+            filename = ydl.prepare_filename(info)
+            file_path = os.path.basename(filename)
 
-        try:
-            supabase.table('downloads').insert({
-                'video_url': url,
-                'video_title': title,
-                'format': fmt,
-                'quality': quality,
-                'ip_address': request.remote_addr
-            }).execute()
-            col = 'total_mp4' if fmt == 'mp4' else 'total_mp3'
-            supabase.rpc('increment_stats', {'col_name': col}).execute()
-        except:
-            pass
-
-        return jsonify({'title': title, 'duration': duration, 'status': 'ready'})
+            return {
+                "success": True,
+                "title": info.get('title', 'Video'),
+                "duration": info.get('duration_string', 'N/A'),
+                "thumbnail": info.get('thumbnail'),
+                "download_url": f"/download/{file_path}",
+                "format": request.format
+            }
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/stats', methods=['GET'])
-def stats():
-    try:
-        res = supabase.table('stats').select('*').eq('id', 1).execute()
-        return jsonify(res.data[0])
-    except:
-        return jsonify({'total_downloads': 0})
-
-@app.route('/')
-def home():
-    return 'YTDown backend is running!'
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+        error_msg = str(e)
+        if "Requested format is not available" in error_msg:
+            error_msg = "Format not available. Try a different quality or video."
+        raise HTTPException(status_code=400, detail=error_msg)
