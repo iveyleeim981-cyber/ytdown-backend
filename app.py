@@ -38,8 +38,8 @@ async def fetch_video(request: DownloadRequest):
         }
 
         if request.format == "mp4":
-            ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best'
-        else:
+            ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best'
+        else:  # mp3
             ydl_opts['format'] = 'bestaudio/best'
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
@@ -53,8 +53,8 @@ async def fetch_video(request: DownloadRequest):
             
             return {
                 "success": True,
-                "title": info.get('title'),
-                "duration": info.get('duration_string'),
+                "title": info.get('title', 'Video'),
+                "duration": info.get('duration_string', 'N/A'),
                 "download_url": f"/download/{os.path.basename(filename)}"
             }
 
