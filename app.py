@@ -31,7 +31,7 @@ def fetch():
     'ignoreerrors': False,
     'extractor_args': {
         'youtube': {
-            'player_client': ['ios'],
+            'player_client': ['tv_embedded'],
         }
     },
 }
