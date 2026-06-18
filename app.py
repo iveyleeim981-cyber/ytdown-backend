@@ -18,7 +18,7 @@ def get_ydl_opts():
         'ignoreerrors': False,
         'extractor_args': {
             'youtube': {
-                'player_client': ['tv_embedded'],
+                'player_client': ['android'],
             }
         },
     }
