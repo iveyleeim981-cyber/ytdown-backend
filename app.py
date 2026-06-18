@@ -29,7 +29,7 @@ def fetch():
     ydl_opts = {
         'quiet': True,
         'skip_download': True,
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' if fmt == 'mp4' else 'bestaudio/best',
+        'format': 'best[ext=mp4]/best' if fmt == 'mp4' else 'bestaudio[ext=m4a]/bestaudio/best',
         'ignoreerrors': False,
         'no_warnings': True,
     }
