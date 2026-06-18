@@ -23,7 +23,7 @@ def fetch():
     ydl_opts = {
         'quiet': True,
         'skip_download': True,
-        'cookiefile': 'cookies.txt',
+        'cookiefile': '/opt/render/project/src/cookies.txt',
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' if fmt == 'mp4' else 'bestaudio/best',
         'ignoreerrors': False,
     }
