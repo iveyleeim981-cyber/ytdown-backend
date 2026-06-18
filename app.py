@@ -7,7 +7,6 @@ import uuid
 
 app = FastAPI(title="YTDown Backend")
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,12 +17,12 @@ app.add_middleware(
 
 class DownloadRequest(BaseModel):
     url: str
-    format: str      # "mp4" or "mp3"
+    format: str
     quality: str = "best"
 
 @app.get("/")
 async def root():
-    return {"status": "✅ YTDown Backend is running"}
+    return {"status": "✅ Backend is running"}
 
 @app.post("/fetch")
 async def fetch_video(request: DownloadRequest):
@@ -36,12 +35,11 @@ async def fetch_video(request: DownloadRequest):
             'quiet': True,
             'no_warnings': True,
             'noplaylist': True,
-            'http_chunk_size': 10485760,
         }
 
         if request.format == "mp4":
-            ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best'
-        else:  # mp3
+            ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best'
+        else:
             ydl_opts['format'] = 'bestaudio/best'
             ydl_opts['postprocessors'] = [{
                 'key': 'FFmpegExtractAudio',
@@ -51,21 +49,17 @@ async def fetch_video(request: DownloadRequest):
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(request.url, download=True)
-            
             filename = ydl.prepare_filename(info)
-            file_path = os.path.basename(filename)
-
+            
             return {
                 "success": True,
-                "title": info.get('title', 'Video'),
-                "duration": info.get('duration_string', 'N/A'),
-                "thumbnail": info.get('thumbnail'),
-                "download_url": f"/download/{file_path}",
-                "format": request.format
+                "title": info.get('title'),
+                "duration": info.get('duration_string'),
+                "download_url": f"/download/{os.path.basename(filename)}"
             }
 
     except Exception as e:
-        error_msg = str(e)
-        if "Requested format is not available" in error_msg:
-            error_msg = "Format not available. Try a different quality or video."
-        raise HTTPException(status_code=400, detail=error_msg)
+        error = str(e)
+        if "format is not available" in error.lower():
+            error = "Requested quality not available. Try another quality."
+        raise HTTPException(status_code=400, detail=error)
