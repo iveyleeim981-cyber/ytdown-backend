@@ -29,9 +29,12 @@ def fetch():
     'quiet': False,
     'skip_download': True,
     'ignoreerrors': False,
-    'extractor_args': {'youtube': {'player_client': ['web']}},
+    'extractor_args': {
+        'youtube': {
+            'player_client': ['ios'],
+        }
+    },
 }
-
     if os.path.exists(COOKIES_PATH):
         ydl_opts['cookiefile'] = COOKIES_PATH
 
