@@ -105,7 +105,7 @@ def download():
             endpoint = f"{BASE_URL}/download_video/{video_id}"
             params = {"quality": "247"}
 
-        res = requests.get(endpoint, headers=get_headers(), params=params, timeout=20)
+        res = requests.get(endpoint, headers=get_headers(), params=params, timeout=60)
         result = res.json()
 
         download_url = result.get('url') or result.get('download_url') or result.get('link') or result.get('downloadUrl')
