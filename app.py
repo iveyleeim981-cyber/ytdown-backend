@@ -55,7 +55,7 @@ def fetch():
             f"{BASE_URL}/get-video-info/{video_id}",
             headers=get_headers(),
             params={"return_available_quality": "true"},
-            timeout=20
+            timeout=60
         )
         result = res.json()
         title = result.get('title', 'Video')
