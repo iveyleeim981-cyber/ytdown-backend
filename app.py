@@ -36,10 +36,12 @@ def fetch():
         ydl_opts['cookiefile'] = COOKIES_PATH
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            title = info.get('title', 'Unknown')
-            duration = info.get('duration_string', '?')
+       with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    info = ydl.extract_info(url, download=False)
+    if info is None:
+        return jsonify({'error': 'Could not fetch video info. Video may be private or unavailable.'}), 500
+    title = info.get('title', 'Unknown')
+    duration = info.get('duration_string', '?')
 
         try:
             supabase.table('downloads').insert({
