@@ -29,7 +29,7 @@ def fetch():
     'quiet': False,
     'skip_download': True,
     'no_warnings': False,
-    'ignoreerrors': True,
+    'ignoreerrors': False,
 }
 
     if os.path.exists(COOKIES_PATH):
