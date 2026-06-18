@@ -113,7 +113,7 @@ def download():
         if not download_url:
             # try quality 137 for mp4 as fallback
             if fmt == 'mp4':
-                res2 = requests.get(endpoint, headers=get_headers(), params={"quality": "137"}, timeout=20)
+                res2 = requests.get(endpoint, headers=get_headers(), params={"quality": "137"}, timeout=60)
                 result2 = res2.json()
                 download_url = result2.get('url') or result2.get('download_url') or result2.get('link')
 
