@@ -26,10 +26,11 @@ def fetch():
         return jsonify({'error': 'No URL provided'}), 400
 
     ydl_opts = {
-        'quiet': False,
-        'skip_download': True,
-        'ignoreerrors': False,
-    }
+    'quiet': False,
+    'skip_download': True,
+    'ignoreerrors': False,
+    'extractor_args': {'youtube': {'player_client': ['web']}},
+}
 
     if os.path.exists(COOKIES_PATH):
         ydl_opts['cookiefile'] = COOKIES_PATH
