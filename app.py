@@ -19,10 +19,8 @@ def get_ydl_opts():
         'extractor_args': {
             'youtube': {
                 'player_client': ['android'],
-                'skip_webpage': True,
             }
         },
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
     }
 
 @app.route('/fetch', methods=['POST', 'OPTIONS'])
