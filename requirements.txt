@@ -1,4 +1,5 @@
-fastapi
-uvicorn[standard]
+flask
+flask-cors
 yt-dlp
-python-multipart
+supabase
+gunicorn
