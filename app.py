@@ -18,7 +18,12 @@ def fetch():
     quality = data.get('quality', '1080p')
     if not url:
         return jsonify({'error': 'No URL provided'}), 400
-    ydl_opts = {'quiet': True, 'skip_download': True, 'cookiefile': 'cookies.txt'}
+    ydl_opts = {
+    'quiet': True,
+    'skip_download': True,
+    'cookiefile': 'cookies.txt',
+    'format': 'bestvideo+bestaudio/best',
+}
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
